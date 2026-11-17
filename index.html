@@ -80,6 +80,18 @@
   .quiz summary{font-weight:600;padding:8px 4px 8px 32px}
   .quiz summary::before{content:"?";font-weight:700;background:var(--pbg);color:var(--pd);border-radius:50%;padding:1px 8px}
   .quiz .ans{padding:7px 2px 10px}
+  .gl{border-bottom:1.5px dotted #7986cb;cursor:help}
+  .gl:hover,.gl:focus{background:#eef0fb;outline:none}
+  .glpop{position:absolute;z-index:50;background:#263238;color:#fff;border-radius:10px;padding:9px 12px;font-size:.92rem;line-height:1.55;box-shadow:0 4px 14px rgba(0,0,0,.25);font-weight:400}
+  .glpop b{color:#ffd166}
+  .quizbtn{font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;border:2px solid #ef6c00;background:#fff;color:#b45309;border-radius:10px;padding:7px 12px;margin-inline-start:8px}
+  .quizbtn[aria-pressed="true"]{background:#ef6c00;color:#fff}
+  body.noquiz .quiz,body.noquiz .quiz-h{display:none}
+  @media(max-width:560px){.quizbtn{font-size:.82rem;padding:5px 7px;margin-inline-start:4px;border-width:1.5px} .quizbtn .lg,.printbtn .lg{display:none} .seg button,.quizbtn,.printbtn{padding:5px 6px;font-size:.8rem}}
+  @media(min-width:380px) and (max-width:560px){.controls{white-space:nowrap}}
+  .quizbtn .sm{display:none}
+  @media(max-width:560px){.quizbtn .sm{display:inline}}
+  @media print{.glpop,.quizbtn{display:none !important} .gl{border:0} body.noquiz .quiz{display:block} body.noquiz .quiz-h{display:block}}
   .top{display:block;text-align:center;color:var(--muted);text-decoration:none;font-size:.84rem;margin:6px 0}
   footer{text-align:center;color:var(--muted);font-size:.83rem;padding:24px 16px 50px}
   /* ---- mode visibility ---- */
@@ -116,7 +128,8 @@
 
 <main>
   <div class="callout"><b>איך ללמוד:</b> בחרו <b>מצב</b> למטה — <b>סקירה</b> (רק השורה החשובה בכל נושא) · <b>לימוד</b> (הסבר קצר) · <b>מעמיק</b> (הסבר מלא + דוגמאות + מקורות) · <b>מורחב</b> (+ שאלות תרגול עם תשובות). הבחירה נשמרת.<br>
-  🎯 בסוף כל פרק יש <b>"בחנו את עצמכם"</b> — מקרים קצרים בסגנון המצגות ("באיזו זכות?", "לגיטימי?"). הם מוצגים בכל המצבים.<br>
+  🎯 בסוף כל פרק יש <b>"בחנו את עצמכם"</b> — מקרים קצרים בסגנון המצגות ("באיזו זכות?", "לגיטימי?"). אפשר להציג או להסתיר אותם בכפתור 🎯 שליד בחירת המצב.<br>
+  💡 מילה עם <span class="gl" tabindex="0" role="button" data-t="קו מנוקד" data-d="כך נראה הסבר קצר. לחיצה נוספת סוגרת אותו.">קו מנוקד</span> מתחתיה — לחצו עליה לקבלת הסבר קצר.<br>
   <span class="tag t">⭐ דגש המורה</span> = מופיע במצגות של המורה, ולכן סביר שיופיע במבחן. <span class="tag b">📊 בבגרות</span> = כמה פעמים הנושא נשאל בבגרויות 2019–2026.</div>
 
   <div class="controls">
@@ -127,7 +140,8 @@
       <button data-mode="deep">מעמיק</button>
       <button data-mode="full">מורחב</button>
     </span>
-    <button class="printbtn" id="printBtn" title="הדפסה / שמירה כ-PDF — כל הרמות והתשובות נפתחות">🖨️ הדפסה</button>
+    <button class="quizbtn" id="quizBtn" aria-pressed="true" title="הצגה או הסתרה של מקרי התרגול הקצרים בסוף כל פרק">🎯 <span class="lg">בחנו את עצמכם</span><span class="sm">בחנו</span></button>
+    <button class="printbtn" id="printBtn" title="הדפסה / שמירה כ-PDF — כל הרמות והתשובות נפתחות">🖨️<span class="lg"> הדפסה</span></button>
     <div class="saved-note" id="savedNote"></div>
   </div>
 
@@ -1164,10 +1178,110 @@
   document.querySelectorAll('.seg-mode button').forEach(function(b){b.addEventListener('click',function(){
     var v=b.dataset.mode;try{localStorage.setItem(KEY,v);}catch(e){}apply(v);
     if(note){note.textContent='✓ נשמר';clearTimeout(t);t=setTimeout(function(){note.textContent='';},1500);}});});
+  var qb=document.getElementById('quizBtn'), QK='ekronot-quiz-v1';
+  function setQ(on){body.classList.toggle('noquiz',!on); if(qb) qb.setAttribute('aria-pressed',on?'true':'false');}
+  var qon=true; try{qon=localStorage.getItem(QK)!=='0';}catch(e){}
+  setQ(qon);
+  if(qb) qb.addEventListener('click',function(){qon=!qon; try{localStorage.setItem(QK,qon?'1':'0');}catch(e){} setQ(qon);});
   var pb=document.getElementById('printBtn');
   if(pb) pb.addEventListener('click',function(){window.print();});
   window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.dataset.po=d.open?'1':'0';d.open=true;});});
   window.addEventListener('afterprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=d.dataset.po==='1';});});
+})();
+</script>
+<script>
+(function(){
+  // term variants -> [definition, home section id (no tooltip there) or '']
+  var G=[
+   [['ריבון'],'בעל הסמכות העליונה במדינה. בדמוקרטיה — העם.','am'],
+   [['לגיטימציה'],'הכרה, "הכשר" שהציבור נותן לשלטון ולמוסדותיו.','culture'],
+   [['לגיטימית','לגיטימי'],'מקובל ומוצדק — שיש לו הצדקה.',''],
+   [['משילות'],'היכולת של הממשלה למשול: לקבל החלטות ולבצע אותן.',''],
+   [['ממשלה קואליציונית','ממשלת קואליציה','ממשלות קואליציה','קואליציה'],'כמה מפלגות שחוברות יחד כדי להשיג רוב בכנסת ולהקים ממשלה.',''],
+   [['אופוזיציה'],'הסיעות וחברי הכנסת שאינם חלק מהממשלה.',''],
+   [['הצבעת אי-אמון','אי-אמון'],'הצבעה בכנסת שמטרתה להפיל את הממשלה; דרושים 61 חברי כנסת.',''],
+   [['סטטוס-קוו'],'ההסדר שנקבע בקום המדינה בענייני דת ומדינה (שבת, כשרות, נישואין, חינוך), ונשמר כפשרה בין דתיים לחילונים.',''],
+   [['מידתיות','מידתית','מידתי'],'פגיעה בזכות רק במידה שאינה עולה על הנדרש להשגת המטרה.',''],
+   [['אוטונומיה','אוטונומי'],'עצמאות — אדם שמחליט בעצמו על חייו.',''],
+   [['תבוני'],'בעל שכל ויכולת לחשוב ולשקול.',''],
+   [['אוניברסליות','אוניברסלי'],'חל על כל בני האדם, בכל מקום.',''],
+   [['שרירותיים','שרירותי'],'בלי סיבה מוצדקת ובלי כללים — לפי רצונו של מי שמחליט.',''],
+   [['פריימריז'],'בחירות פנימיות שבהן חברי המפלגה בוחרים את המועמדים לרשימה.',''],
+   [['ועדה מסדרת'],'קבוצה קטנה במפלגה שקובעת את רשימת המועמדים לכנסת.',''],
+   [['מנדטים','מנדט'],'מושב בכנסת.',''],
+   [['ח"כים','ח"כ'],'חבר/י כנסת.',''],
+   [['בג"ץ'],'בית המשפט הגבוה לצדק: בית המשפט העליון כשהוא דן בעתירות נגד רשויות המדינה.',''],
+   [['חוקי יסוד','חוק יסוד'],'חוק בעל מעמד מיוחד. חוקי היסוד יחד משמשים מעין חוקה לישראל.',''],
+   [['חוקה'],'מסמך עליון שקובע את עקרונות המשטר ואת זכויות האדם, ועומד מעל החוקים הרגילים.',''],
+   [['הפרדת רשויות','הפרדת הרשויות'],'חלוקת כוח השלטון לשלוש רשויות — מחוקקת, מבצעת ושופטת — שמאזנות ומבקרות זו את זו.',''],
+   [['הגבלת השלטון'],'העיקרון שלפיו מרסנים את כוח השלטון, כדי שלא ינצל אותו לרעה ויפגע בזכויות.',''],
+   [['שלטון החוק'],'כולם — אזרחים ורשויות השלטון — כפופים לחוק ושווים בפניו.',''],
+   [['הרשות המבצעת'],'הממשלה ומשרדיה.',''],
+   [['הרשות המחוקקת'],'הפרלמנט; בישראל — הכנסת.',''],
+   [['הפיקוח הבלתי פורמלי','מנגנון פיקוח בלתי פורמלי'],'ביקורת על השלטון מצד אזרחים, תקשורת וארגונים — בלי סמכות שנקבעה בחוק.',''],
+   [['ועדה קרואה'],'ועדה שמשרד הפנים ממנה לנהל רשות מקומית במקום ראש הרשות והמועצה שנבחרו.',''],
+   [['סוציאל-דמוקרטית'],'השקפה שלפיה המדינה צריכה להתערב בכלכלה, לספק שירותים חברתיים ולצמצם פערים.',''],
+   [['ביטחון סוציאלי'],'רשת ביטחון כלכלית מהמדינה (קצבאות) למי שנקלע למצוקה.',''],
+   [['תבחין'],'קריטריון — הדבר שלפיו משווים.',''],
+   [['קיבוציות'],'של קבוצה; משותפות לחברי הקבוצה.',''],
+   [['משוסעת','שסועה'],'חברה שמפולגת לקבוצות שיש ביניהן מתחים עמוקים.',''],
+   [['פלורליזם'],'הכרה בערך של ריבוי דעות וקבוצות, ועידוד ותמיכה בקיומן ובביטוין.','culture'],
+   [['סובלנות'],'יחס מכבד ולא אלים כלפי מי ששונה ממני ודעותיו — גם כשאיני מסכים.','culture'],
+   [['הסכמיות'],'הסכמה רחבה בין קבוצות בחברה על כללי המשחק ועל אופי המדינה, שמאפשרת לחיות יחד למרות המחלוקות.','culture'],
+   [['עריצות הרוב'],'מצב שבו הרוב מנצל את כוחו לרעה, מדכא את המיעוט ופוגע בזכויותיו.','rov'],
+   [['הכרעת הרוב'],'מחלוקת מוכרעת בדרכי שלום לפי מה שהרוב תומך בו — בלי לפגוע באופן בלתי סביר בזכויות יסוד ובמיעוט.','rov'],
+   [['רוב מוחלט'],'יותר מ-50% מכלל בעלי זכות ההצבעה; בכנסת — 61.','rov'],
+   [['שלטון העם'],'האזרחים הם הריבון ומקור הסמכות; הם בוחרים נציגים לזמן מוגבל שיפעלו למענם.','am'],
+   [['אחוז החסימה'],'שיעור הקולות המינימלי שרשימה צריכה כדי להיכנס לכנסת (3.25%).','am'],
+   [['משאל עם'],'שאלה אחת שמופנית לכל האזרחים, והם עונים עליה "בעד" או "נגד" בקלפי.','am'],
+   [['העדפה מתקנת'],'הטבה לקבוצה מקופחת, לזמן מוגבל, כדי לצמצם פערים.','rights'],
+   [['אפליה פסולה'],'יחס שונה לאנשים שווים בלי סיבה מוצדקת, רק בגלל זהותם או שיוכם.','rights'],
+   [['זכויות טבעיות'],'זכויות יסוד של כל אדם באשר הוא אדם (חיים, חירות, קניין, שוויון, כבוד, הליך הוגן); השלטון לא מעניק אותן אלא מחויב להגן עליהן.','rights'],
+   [['חופש הביטוי'],'זכותו של אדם לבטא בפומבי, בכל דרך, את דעותיו ואמונותיו.','rights'],
+   [['חופש ההתאגדות'],'זכותו של אדם להתארגן עם אחרים בקבוצה, ארגון או מפלגה למען מטרה משותפת.','rights']
+  ];
+  var esc=function(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');};
+  var defs={}, alts=[];
+  G.forEach(function(g,i){g[0].forEach(function(v){defs[v]=i;alts.push(v);});});
+  alts.sort(function(a,b){return b.length-a.length;});
+  var re=new RegExp('(^|[^א-ת"])([ולבהמשכ]{0,2})('+alts.map(esc).join('|')+')(?![א-ת"])','g');
+  var SKIP='.quiz,#exam,#sources,details,summary,h1,h2,h3,h4,a,svg,button,nav,header,.tag,.gl,.nogl,.controls,script,style';
+  document.querySelectorAll('main h3').forEach(function(h){ if(h.textContent.trim()==='מושגי הפרק'){var n=h.nextElementSibling; if(n) n.classList.add('nogl');}});
+  document.querySelectorAll('main section').forEach(function(sec){
+    var seen={}, w=document.createTreeWalker(sec,NodeFilter.SHOW_TEXT,null), nodes=[], n;
+    while(n=w.nextNode()){ if(!n.parentElement.closest(SKIP)) nodes.push(n); }
+    nodes.forEach(function(node){
+      var t=node.nodeValue, m, last=0, frag=null; re.lastIndex=0;
+      while(m=re.exec(t)){
+        var gi=defs[m[3]], g=G[gi];
+        if(seen[gi]||g[2]===sec.id) continue;
+        seen[gi]=1; frag=frag||document.createDocumentFragment();
+        var start=m.index+m[1].length;
+        frag.appendChild(document.createTextNode(t.slice(last,start)));
+        var s=document.createElement('span'); s.className='gl'; s.tabIndex=0; s.setAttribute('role','button');
+        s.dataset.t=g[0][g[0].length-1]; s.dataset.d=g[1]; s.textContent=m[2]+m[3];
+        frag.appendChild(s); last=start+m[2].length+m[3].length;
+      }
+      if(frag){frag.appendChild(document.createTextNode(t.slice(last))); node.parentNode.replaceChild(frag,node);}
+    });
+  });
+  var pop=document.createElement('div'); pop.className='glpop'; pop.setAttribute('role','tooltip'); pop.hidden=true; document.body.appendChild(pop);
+  var cur=null;
+  function hide(){pop.hidden=true;cur=null;}
+  function show(el){
+    if(cur===el){hide();return;}
+    cur=el; pop.innerHTML=''; var b=document.createElement('b'); b.textContent=el.dataset.t+': '; pop.appendChild(b); pop.appendChild(document.createTextNode(el.dataset.d));
+    pop.hidden=false;
+    var r=el.getBoundingClientRect(), W=document.documentElement.clientWidth, pw=Math.min(320,W-16);
+    pop.style.width=pw+'px';
+    var left=Math.max(8,Math.min(W-pw-8,r.left+r.width/2-pw/2));
+    pop.style.left=(left+window.scrollX)+'px';
+    var top=r.bottom+6; if(top+pop.offsetHeight>window.innerHeight-8 && r.top-pop.offsetHeight-6>60) top=r.top-pop.offsetHeight-6;
+    pop.style.top=(top+window.scrollY)+'px';
+  }
+  document.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('.gl'); if(g){show(g);} else if(!e.target.closest('.glpop')) hide();});
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') hide(); else if((e.key==='Enter'||e.key===' ')&&document.activeElement&&document.activeElement.classList.contains('gl')){e.preventDefault();show(document.activeElement);} });
+  window.addEventListener('resize',hide);
 })();
 </script>
 <footer>מבוסס על המצגות של המורה, ספר הלימוד "להיות אזרחים בישראל" ושאלוני הבגרות של משרד החינוך · עזר למידה, אינו תחליף לחומר הכיתה · בהצלחה!</footer>
